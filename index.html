@@ -1,0 +1,100 @@
+<!DOCTYPE HTML> 
+<html> 
+  <head> 
+    <meta charset="utf-8"> 
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>WebGL project</title> 
+    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style/main.css">
+    
+   
+  </head> 
+  <body> 
+ 
+    <h1 class="title"> Procedural Generated Planet </h1>
+    <div id="parameter-wrapper" >
+      <p> This is a procedural generated planet developed in WebGL. The application utilizes Simplex Noise
+      which is a modified and optimized version of the original Classic Perlin Noise. Hold down left mouse button to rotate 
+      and scroll to zoom. If you have any performance issues, try removing Atmosphere or Clouds. 
+      <h1> Play with parameters! </h1>
+      <div class="input-wrapper">
+        <label>  Drought </label>
+        <input type="range" id="droughtFactor" onChange="shaderInput.updateDroughtFactor(this.value)" value="0" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label>  Humidity </label>
+        <input type="range" id="humidityFactor" onChange="shaderInput.updateHumidityFactor(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label> Beach Factor </label>
+        <input type="range" id="beachFactor" onChange="shaderInput.updateBeachFactor(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label> Snow Factor </label>
+        <input type="range" id="snowFactor" onChange="shaderInput.updateSnowFactor(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label>  Cloud Weight </label>
+        <input type="range" id="cloudFactor" onChange="shaderInput.updateCloudFactor(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label> Cloud Noise </label>
+        <input type="range" id="cloudDetail" onChange="shaderInput.updateCloudNoise(this.value)" value="50"  min="0" max="100" list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label> Water Level </label>
+        <input type="range" id="waterNoise" onChange="shaderInput.updateWaterLevel(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+      <div class="input-wrapper">
+        <label> Land Noise </label>
+        <input type="range" id="landNoise" onChange="shaderInput.updateLandNoise(this.value)" value="50" min="0" max="100"  list="steplist">
+      </div>
+
+      <div class="input-wrapper">
+        <label> Animate Sun </label>
+        <input type="checkbox" id="animateSun" checked onChange="shaderInput.toggleAnimateSun(this)">
+      </div>
+      <div class="input-wrapper">
+        <label> Move Continents </label>
+        <input type="checkbox" id="animateEarth" onChange="shaderInput.toggleAnimateEarth(this)">
+      </div>
+      <div class="input-wrapper">
+        <label> Clouds </label>
+        <input type="checkbox" id="visibleClouds" checked onChange="shaderInput.toggleClouds(this)">
+        <label> Animate </label>
+        <input type="checkbox" checked onChange="shaderInput.toggleMovingClouds(this)">
+      </div>
+      <div class="input-wrapper">
+        <label> Atmosphere </label>
+        <input type="checkbox" id="visibleAtmosphere" checked onChange="shaderInput.toggleAtmosphere(this)">
+      </div>
+
+      
+
+      
+    </div>
+    <div id="container"></div> 
+
+
+    <datalist id="steplist">
+        <option>0</option>
+        <option>25</option>
+        <option>50</option>
+        <option>75</option>
+        <option>100</option>
+    </datalist>
+  
+
+    <script src="/js/build/three.js" > </script>
+    <script src="/js/libs/OrbitControls.js" > </script>
+    <script src="/js/libs/stats.min.js" > </script>
+    <script src="/js/libs/Detector.js" > </script>
+    <script src="js/setup.js" > </script>
+    <script src="js/shaderinput.js" > </script>
+    <script src="js/FileFetcher.js" > </script>
+    <script src="js/main.js" > </script>
+ 
+    
+ 
+  </body> 
+</html>
