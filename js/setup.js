@@ -93,7 +93,7 @@ function PlanetSystem(){
         sunLight.position.set(40000.0,20000.0,0.0);
     
 
-        var imagePrefix = "/../images/skybox2/";
+        var imagePrefix = "images/skybox2/";
         var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
         var imageSuffix = ".png";
         var skyGeometry = new THREE.CubeGeometry( 1000000, 1000000 ,1000000 ); 
