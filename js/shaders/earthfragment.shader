@@ -143,6 +143,12 @@ void calculateLight(vec3 surfaceNormal, vec3 lightDirection, vec3 worldPos, floa
     }
 }
 
+// 'threshold' is constant , 'value' is smoothly varying
+float aastep ( float threshold , float value ) {
+  float afwidth = 0.7 * length ( vec2 ( dFdx ( value ), dFdy ( value )));
+  return smoothstep ( threshold - afwidth , threshold + afwidth , value );
+}
+
 
 
 uniform float snowFactor;
@@ -150,7 +156,11 @@ uniform float beachFactor;
 uniform float droughtFactor;
 uniform float humidityFactor;
 varying float elevation;
-varying float displ;
+uniform float landConstant;
+uniform float time;
+
+uniform float waterHeightConstant;
+
 
 
 varying vec3 vNormal;
@@ -172,7 +182,8 @@ void main(){
   vec3 color_grey   =   vec3(0.7,0.7,0.7);
   vec3 color_yellow = vec3(1.0,1.0,0.0) ;
   vec3 color_beach = vec3(0.9,0.83,0.53);
-  vec3 color_blue   =   vec3(70.0/255.0,119.0/255.0,120.0/255.0);
+
+  vec3 color_blue   =  vec3(70.0/255.0,119.0/255.0,255.0/255.0);
   vec3 color_white  =  vec3(1.0,1.0,1.0);
   vec3 Cland        = vec3(0.0);  
   vec3 Cbottom        = vec3(0.0);  
@@ -193,21 +204,55 @@ void main(){
 
 
 
-  surfaceNormal = vNormal;
-  el = elevation;
+  
+  //Recalculate elevation according to earthvertex.shader
+  //TEMP Constants
+  float bumpNoise = 1.0;
+
+  //Noise it up
+  float elevationBump = 0.0;
+  vec3 scalePos = 1.25 * nPos * landConstant / multiplier + time*10.0;
+  elevationBump += 0.03  *  multiplier * ( snoise(scalePos,grad));
+  grad *= 0.03 * 1.25 * landConstant;
+  
+  float displ = 0.0;
+  if(elevationBump < 0.0){ 
+    //Lets lower the surface under the sea.
+    elevationBump = 10.0*elevationBump;
+  }else{
+    gradTemp = vec3(0.0);
+    elevationBump += 0.005 * multiplier * (snoise(nPos * 10.0 / multiplier,gradTemp));
+    grad += gradTemp * 0.005 * 10.0; // update Gradient
+  }
+
+  //Perturb normal
+  perturbation = grad - dot(grad, vNormal) * vNormal;
+  surfaceNormal = vNormal - bumpNoise * perturbation;
+  surfaceNormal = normalize(surfaceNormal); 
+
+
+  el = elevationBump;
+
   float bumpamount = 0.5;
+
+  //Snow fractal 
+  float snowFractal = 0.0;
+  gradTemp = vec3(0.0);
+  snowFractal += el +  0.001 *  multiplier  * (snoise(nPos * 50.0 / multiplier,gradTemp));
+  grad += 0.001* gradTemp * 50.0;
+  
 
 
   
-  float nearPol = abs(nPos.y + abs(el) * 0.5);
+  float nearPol = abs(nPos.y + abs(snowFractal)  * 2.0);
   //Near north and south pole -> SNOW
-  if(nearPol * droughtFactor > 0.95 * multiplier){ 
+  if(nearPol * droughtFactor >= 0.95 * multiplier ){ 
     //NEAR POLES
     gradTemp = vec3(0.0); 
     el += 0.001 *  multiplier  * ( snoise(nPos * 200.0 / multiplier ,gradTemp));
     grad += 0.001*gradTemp * 200.0;
   
-    bumpamount = 0.1;
+    bumpamount = 0.5;
     perturbation = grad - dot(grad, surfaceNormal) * surfaceNormal;
     surfaceNormal = surfaceNormal - bumpamount * perturbation;
     surfaceNormal = normalize(surfaceNormal);
@@ -216,11 +261,20 @@ void main(){
     specMat    = vec4(vec3(0.5),1.0);
     ambientMat = vec4(vec3(0.7),1.0);
 
+    //Paint the north/south pole ice close to water as interpolated
+    float waterAdjustment = (waterHeightConstant -1.0) * multiplier * 0.025;
+    if(el  <  30.0  + waterAdjustment){
+      Cland = mix(color_blue, color_white, aastep(20.0 + waterAdjustment,el));
+      diffuseMat = vec4(vec3(0.3),1.0);
+      ambientMat = vec4(vec3(0.4),1.0);
+    }
+
   //Higher altitude -> SNOW
-  }else if(el * droughtFactor > 150.0 + (10.0 * snowFactorLocal)){
+  }else if(snowFractal * droughtFactor >= 150.0 + (10.0 * snowFactorLocal)){
     gradTemp = vec3(0.0);
     el += 0.001 *  multiplier  * ( snoise(nPos * 200.0 / multiplier ,gradTemp));
     grad += 0.001*gradTemp * 200.0;
+
   
     bumpamount = 0.5;
     perturbation = grad - dot(grad, surfaceNormal) * surfaceNormal;
@@ -231,7 +285,7 @@ void main(){
     ambientMat = vec4(vec3(0.7),1.0);
   }else{ //ORDINARY LAND
 
-    //Small turbulence
+    //Small turbulence  
     gradTemp = vec3(0.0);
     el += 0.001 *  multiplier  * (snoise(nPos * 100.0 / multiplier,gradTemp));
     grad += 0.001 * gradTemp * 100.0;
@@ -243,16 +297,20 @@ void main(){
     surfaceNormal = surfaceNormal - bumpamount * perturbation;
     surfaceNormal = normalize(surfaceNormal);
     //If drought is full,then droughtFactor is 0. Only beach on earth if draught is 0
-    Cland = vec3(mix(color_beach,color_green, humidityFactor * droughtFactor * abs(el) * 0.005));// abs(elevation) *20.0 / multiplier));
-    //If beach or water bottom
-    if(el < 10.0 * beachFactor){
-      Cland = vec3(mix(color_beach,color_blue, abs(el) * 0.003));
-      ambientMat = vec4(vec3(0.5),1.0);
+    Cland = vec3(mix(color_beach,color_green, humidityFactor * droughtFactor * (el) * 0.005));// abs(elevation) *20.0 / multiplier));
+
+    //Paint the land close to water to make a smoother land line. 
+    float waterAdjustment = (waterHeightConstant -1.0) * multiplier * 0.025;
+    if(el   <  beachFactorLocal * 40.0  + waterAdjustment){
+      Cland = mix(color_blue, color_beach, aastep(20.0 + waterAdjustment,el));
+      diffuseMat = vec4(vec3(0.3),1.0);
+      ambientMat = vec4(vec3(0.4),1.0);
     }
+    
   }
-  
-  
+ 
    
+  
 
   vec4 ambientColor;
   vec4 diffuseColor = vec4(0.0); 
@@ -264,8 +322,7 @@ void main(){
     ambientColor  = ambientMat;
     calculateLight(surfaceNormal,lightDir, vPos,specularShiny, specMat, diffuseMat, diffuseColor, specularColor);
   }
-
-  gl_FragColor =   vec4( Cland.rgb ,1.0) *(ambientColor + diffuseColor + specularColor) ;
+  gl_FragColor =   vec4( Cland.rgb ,1.0) *(ambientColor + diffuseColor + specularColor);
 }
 
 

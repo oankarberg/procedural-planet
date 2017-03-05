@@ -215,7 +215,7 @@ varying vec3 vPos;
 varying vec3 nPos;
 varying vec3 vNormal;
 varying float elevation;
-varying float displ;
+
 
 
 void main() {
@@ -232,6 +232,7 @@ void main() {
     vec3 scalePos = 1.25 * position * landConstant / multiplier + time*10.0;
     elevation += 0.03  *  multiplier * ( snoise(scalePos,grad));
     grad *= 0.03 * 1.25 * landConstant;
+
     
     float displ = 0.0;
     if(elevation < 0.0){ 
@@ -249,7 +250,7 @@ void main() {
 
     // For the fragmentshader    
     vPos = (viewMatrix * vec4(newPosition, 1.0 )).xyz;
-    nPos = newPosition; //(viewMatrix * vec4(newPosition, 1.0 )).xyz;
+    nPos = position; //(viewMatrix * vec4(newPosition, 1.0 )).xyz;
 
     //Perturb normal,
     vec3 perturbation = grad - dot(grad, normal) * normal;

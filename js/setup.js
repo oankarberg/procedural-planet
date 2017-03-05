@@ -147,6 +147,7 @@ function PlanetSystem(){
             snowFactor: { type: "f", value: 1.0 },
             droughtFactor: { type: "f", value: 1.0 },
             humidityFactor: { type: "f", value: 1.0 },
+            waterHeightConstant: { type: "f", value: 1.0 },
             resolution: { value: new THREE.Vector2() },
         }]);
         uniforms_cloud = THREE.UniformsUtils.merge([

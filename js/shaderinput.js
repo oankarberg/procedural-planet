@@ -18,6 +18,7 @@ function ShaderInput(sApp){
     //Increase expontentially
     var increaseVal =  2.0 * val * 0.01;
     sApp.sceneMaterials[sApp.WATER_INDEX].uniforms['waterHeightConstant'].value = increaseVal; //Math.pow(increaseVal,4.0);
+    sApp.sceneMaterials[sApp.LAND_INDEX].uniforms['waterHeightConstant'].value = increaseVal; //Math.pow(increaseVal,4.0);
   }
 
   this.updateBeachFactor = function(val){
